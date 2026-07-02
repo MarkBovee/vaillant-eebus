@@ -62,6 +62,7 @@ A pure Python EEBUS integration solves all of these: local, low-latency, no extr
 - **DataUpdateCoordinator** — standard HA pattern for polling + subscriptions
 - **SHIP identity/certificate** — generated once, reused for stable SKI
 - **Pairing via myVaillant app** — first connect requires trust confirmation, then certificate-based
+- **Persistent local daemon for development** — keeps one trusted session alive while wrappers and debug tools hot-reload around it
 
 ### Scope
 

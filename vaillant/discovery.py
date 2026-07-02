@@ -1,9 +1,12 @@
 """mDNS and entity discovery — MDNSHandler, discovery builders, reply handlers."""
 
 import asyncio
+import logging
 from typing import Any
 
 from zeroconf import ServiceListener
+
+_LOGGER = logging.getLogger(__name__)
 
 from . import const
 from .ship import MsgCounter, _make_spine_reply_addresses, send_ship_data
@@ -261,12 +264,12 @@ async def reply_node_management_detailed_discovery(
     """Reply to a SPINE read request for nodeManagementDetailedDiscoveryData."""
     ref = request_header.get("msgCounter")
     if ref is None:
-        print("⚠️  [SPINE] Kein msgCounter im Request-Header → kann nicht antworten")
+        _LOGGER.warning("⚠️  [SPINE] Kein msgCounter im Request-Header → kann nicht antworten")
         return
 
     addresses = _make_spine_reply_addresses(request_header, local_device_address=local_device_address)
     if addresses is None:
-        print("⚠️  [SPINE] Request ohne addressSource/addressDestination → kann nicht antworten")
+        _LOGGER.warning("⚠️  [SPINE] Request ohne addressSource/addressDestination → kann nicht antworten")
         return
 
     address_source, address_destination = addresses
@@ -293,7 +296,7 @@ async def reply_node_management_detailed_discovery(
     }
 
     await send_ship_data(ws, reply_datagram)
-    print("📤 [SPINE] Reply gesendet: nodeManagementDetailedDiscoveryData")
+    _LOGGER.info("📤 [SPINE] Reply gesendet: nodeManagementDetailedDiscoveryData")
 
 
 # POC line 945
@@ -336,7 +339,7 @@ async def reply_device_classification_manufacturer_data(
     }
 
     await send_ship_data(ws, reply_datagram)
-    print("📤 [SPINE] Reply gesendet: deviceClassificationManufacturerData")
+    _LOGGER.info("📤 [SPINE] Reply gesendet: deviceClassificationManufacturerData")
 
 
 # POC line 987
@@ -371,7 +374,7 @@ async def reply_device_classification_user_data(
     }
 
     await send_ship_data(ws, reply_datagram)
-    print("📤 [SPINE] Reply gesendet: deviceClassificationUserData")
+    _LOGGER.info("📤 [SPINE] Reply gesendet: deviceClassificationUserData")
 
 
 # POC line 1021
@@ -411,7 +414,7 @@ async def handle_spine_read(
         )
         return
 
-    print(f"⚠️  [SPINE] Unhandled read cmd keys: {list(cmd.keys())}")
+    _LOGGER.warning("⚠️  [SPINE] Unhandled read cmd keys: %s", list(cmd.keys()))
 
 
 # POC line 1060
@@ -431,7 +434,7 @@ async def request_remote_detailed_discovery(
         cmd={"nodeManagementDetailedDiscoveryData": {}},
         msg_counter=msg_counter,
     )
-    print("📤 [SPINE] Read gesendet: nodeManagementDetailedDiscoveryData")
+    _LOGGER.info("📤 [SPINE] Read gesendet: nodeManagementDetailedDiscoveryData")
 
 
 # POC line 1079
@@ -452,4 +455,4 @@ async def request_remote_node_management_use_case_data(
         cmd={"nodeManagementUseCaseData": {}},
         msg_counter=msg_counter,
     )
-    print("📤 [SPINE] Read gesendet: nodeManagementUseCaseData")
+    _LOGGER.info("📤 [SPINE] Read gesendet: nodeManagementUseCaseData")

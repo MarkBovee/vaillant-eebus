@@ -1,9 +1,12 @@
 """Certificate management — create or reuse a local client certificate."""
 
 import datetime
+import logging
 import os
 
 from cryptography import x509
+
+_LOGGER = logging.getLogger(__name__)
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.x509.oid import NameOID
@@ -25,7 +28,7 @@ def get_or_create_certificate():
         with open(cert_file, "rb") as f:
             cert = x509.load_pem_x509_certificate(f.read())
         ski = cert.extensions.get_extension_for_class(x509.SubjectKeyIdentifier).value.digest.hex()
-        print(f"🔄 Zertifikat wiederverwendet (SKI: {ski})")
+        _LOGGER.info("🔄 Zertifikat wiederverwendet (SKI: %s)", ski)
         return ski
     else:
         key = ec.generate_private_key(ec.SECP256R1())
@@ -51,5 +54,5 @@ def get_or_create_certificate():
                 )
             )
         ski = cert.extensions.get_extension_for_class(x509.SubjectKeyIdentifier).value.digest.hex()
-        print(f"📜 Neues Zertifikat erstellt (SKI: {ski})")
+        _LOGGER.info("📜 Neues Zertifikat erstellt (SKI: %s)", ski)
         return ski

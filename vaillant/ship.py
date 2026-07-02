@@ -2,9 +2,12 @@
 
 import asyncio
 import json
+import logging
 import time
 from collections import OrderedDict
 from typing import Any
+
+_LOGGER = logging.getLogger(__name__)
 
 
 # POC line 52
@@ -160,7 +163,7 @@ async def send_ship_json(ws, data):
     eebus_text = json_into_eebus_json(data)
     msg = b"\x01" + eebus_text.encode("utf-8")
     await ws.send(msg)
-    print(f"📤 Gesendet: {list(data.keys())}")
+    _LOGGER.info("📤 Gesendet: %s", list(data.keys()))
 
 
 # POC line 551
@@ -219,12 +222,12 @@ async def perform_ship_handshake(ws, local_ship_id: str):
     # === PHASE 1: CMI (Connection Mode Init) ===
     init_ack = await ws.recv()
     if isinstance(init_ack, bytes):
-        print(f"📥 [CMI] Initial-Bytes empfangen: {init_ack.hex()}")
+        _LOGGER.info("📥 [CMI] Initial-Bytes empfangen: %s", init_ack.hex())
     else:
-        print(f"📥 [CMI] Initial empfangen (nicht-bytes): {init_ack}")
+        _LOGGER.info("📥 [CMI] Initial empfangen (nicht-bytes): %s", init_ack)
 
     # === PHASE 2: HELLO ===
-    print("📤 [HELLO] Sende connectionHello (phase: ready)...")
+    _LOGGER.info("📤 [HELLO] Sende connectionHello (phase: ready)...")
     await send_ship_json(ws, {"connectionHello": {"phase": "ready", "waiting": 60000}})
 
     # State machine for the SHIP handshake phases.
@@ -242,7 +245,7 @@ async def perform_ship_handshake(ws, local_ship_id: str):
             # websockets raises ConnectionClosedError/OK subclasses
             code = getattr(e, "code", None)
             reason = getattr(e, "reason", None)
-            print(f"❌ WebSocket geschlossen während Handshake: code={code} reason={reason} err={e}")
+            _LOGGER.error("❌ WebSocket geschlossen während Handshake: code=%s reason=%s err=%s", code, reason, e)
             return False
         if not isinstance(raw_msg, bytes) or len(raw_msg) < 2:
             continue
@@ -252,7 +255,7 @@ async def perform_ship_handshake(ws, local_ship_id: str):
         header = raw_msg[0]
         if header != 0x01:
             # During/after handshake we might also see data messages (0x02)
-            print(f"⚠️  Unerwarteter SHIP MessageType: 0x{header:02x} (len={len(raw_msg)})")
+            _LOGGER.warning("⚠️  Unerwarteter SHIP MessageType: 0x%02x (len=%s)", header, len(raw_msg))
             continue
 
         payload_raw = raw_msg[1:]
@@ -261,9 +264,9 @@ async def perform_ship_handshake(ws, local_ship_id: str):
 
         try:
             msg = json.loads(payload_text)
-            print(f"📥 Empfangen: {json.dumps(msg, indent=2)}")
+            _LOGGER.info("📥 Empfangen: %s", json.dumps(msg, indent=2))
         except json.JSONDecodeError:
-            print(f"⚠️  JSON Decode Error: {payload_text[:200]}")
+            _LOGGER.warning("⚠️  JSON Decode Error: %s", payload_text[:200])
             continue
 
         # === PHASE 2: HELLO RESPONSE ===
@@ -275,16 +278,16 @@ async def perform_ship_handshake(ws, local_ship_id: str):
                 prolong = hello.get("prolongationRequest")
                 waiting_ms = hello.get("waiting")
 
-                print("⏳ [HELLO] STATUS: PENDING - Warte auf Bestätigung in der myVAILLANT App...")
-                print("👉 JETZT in der App den Zugriff bestätigen!")
+                _LOGGER.info("⏳ [HELLO] STATUS: PENDING - Warte auf Bestätigung in der myVAILLANT App...")
+                _LOGGER.info("👉 JETZT in der App den Zugriff bestätigen!")
 
                 # Important: while the remote side is still pending (waiting for user trust/pairing),
                 # we MUST NOT proceed to protocol/pin/access. To keep the hello phase alive and
                 # avoid timeouts, we answer with our own PENDING + waiting.
                 if isinstance(waiting_ms, int):
-                    print(f"⏳ [HELLO] Remote waiting={waiting_ms}ms prolongationRequest={prolong}")
+                    _LOGGER.info("⏳ [HELLO] Remote waiting=%sms prolongationRequest=%s", waiting_ms, prolong)
                 else:
-                    print(f"⏳ [HELLO] Remote prolongationRequest={prolong}")
+                    _LOGGER.info("⏳ [HELLO] Remote prolongationRequest=%s", prolong)
 
                 now = time.monotonic()
                 if now - last_pending_hello_sent > 5.0:
@@ -293,10 +296,10 @@ async def perform_ship_handshake(ws, local_ship_id: str):
                 # Bleibe in WAITING_HELLO State
 
             elif phase == "ready":
-                print("✅ [HELLO] Phase abgeschlossen - beide Seiten READY")
+                _LOGGER.info("✅ [HELLO] Phase abgeschlossen - beide Seiten READY")
 
                 # === PHASE 3: PROTOCOL HANDSHAKE ===
-                print("📤 [PROTOCOL] Sende messageProtocolHandshake...")
+                _LOGGER.info("📤 [PROTOCOL] Sende messageProtocolHandshake...")
                 await send_ship_json(
                     ws,
                     {
@@ -310,7 +313,7 @@ async def perform_ship_handshake(ws, local_ship_id: str):
                 state = "WAITING_PROTOCOL"
 
             elif phase == "aborted":
-                print("❌ [HELLO] Verbindung von Wärmepumpe abgelehnt (Aborted).")
+                _LOGGER.error("❌ [HELLO] Verbindung von Wärmepumpe abgelehnt (Aborted).")
                 return False
 
         # === PHASE 3: PROTOCOL RESPONSE ===
@@ -320,19 +323,19 @@ async def perform_ship_handshake(ws, local_ship_id: str):
             # ship-go client behavior: remote replies with "select" -> client must send "select" confirmation
             handshake_type = handshake.get("handshakeType")
             if handshake_type != "select":
-                print(f"❌ [PROTOCOL] Unerwarteter handshakeType: {handshake_type}")
+                _LOGGER.error("❌ [PROTOCOL] Unerwarteter handshakeType: %s", handshake_type)
                 return False
 
             # Validiere Protokoll-Version
             version = handshake.get("version", {})
             if version.get("major") != 1:
-                print(f"❌ [PROTOCOL] Nicht unterstützte Version: {version}")
+                _LOGGER.error("❌ [PROTOCOL] Nicht unterstützte Version: %s", version)
                 return False
 
-            print("✅ [PROTOCOL] Protokoll-Handshake bestätigt (Version 1.0)")
+            _LOGGER.info("✅ [PROTOCOL] Protokoll-Handshake bestätigt (Version 1.0)")
             protocol_handshake_received = True
 
-            print("📤 [PROTOCOL] Bestätige Auswahl (select)...")
+            _LOGGER.info("📤 [PROTOCOL] Bestätige Auswahl (select)...")
             await send_ship_json(
                 ws,
                 {
@@ -345,27 +348,27 @@ async def perform_ship_handshake(ws, local_ship_id: str):
             )
 
             # === PHASE 4: PIN STATE ===
-            print("📤 [PIN] Sende connectionPinState (none)...")
+            _LOGGER.info("📤 [PIN] Sende connectionPinState (none)...")
             await send_ship_json(ws, {"connectionPinState": {"pinState": "none"}})
             state = "WAITING_PIN"
 
         elif "messageProtocolHandshakeError" in msg:
             err = (msg.get("messageProtocolHandshakeError") or {}).get("error")
-            print(f"❌ [PROTOCOL] messageProtocolHandshakeError empfangen: error={err}")
+            _LOGGER.error("❌ [PROTOCOL] messageProtocolHandshakeError empfangen: error=%s", err)
             return False
 
         # === PHASE 4: PIN RESPONSE (Optional - manche Geräte bestätigen, manche nicht) ===
         elif "connectionPinState" in msg and state == "WAITING_PIN":
             pin_state = (msg.get("connectionPinState") or {}).get("pinState")
-            print(f"✅ [PIN] PIN-State bestätigt: {pin_state}")
+            _LOGGER.info("✅ [PIN] PIN-State bestätigt: %s", pin_state)
             if pin_state != "none":
-                print("❌ [PIN] Gerät verlangt PIN (oder sendet unerwarteten Zustand). ship-go unterstützt nur 'none'.")
+                _LOGGER.error("❌ [PIN] Gerät verlangt PIN (oder sendet unerwarteten Zustand). ship-go unterstützt nur 'none'.")
                 return False
 
             pin_state_received = True
 
             # === PHASE 5: ACCESS METHODS ===
-            print("📤 [ACCESS] Sende accessMethodsRequest...")
+            _LOGGER.info("📤 [ACCESS] Sende accessMethodsRequest...")
             await send_ship_json(ws, {"accessMethodsRequest": {}})
             state = "WAITING_ACCESS"
 
@@ -373,18 +376,14 @@ async def perform_ship_handshake(ws, local_ship_id: str):
 
         # === PHASE 5: ACCESS RESPONSE ===
         elif "accessMethodsRequest" in msg and state == "WAITING_ACCESS":
-            print("📥 [ACCESS] accessMethodsRequest vom Gerät empfangen → sende accessMethods...")
+            _LOGGER.info("📥 [ACCESS] accessMethodsRequest vom Gerät empfangen → sende accessMethods...")
             await send_access_methods(ws, local_ship_id)
             # Stay in WAITING_ACCESS until we receive accessMethods
 
         elif "accessMethods" in msg and state == "WAITING_ACCESS":
             remote_id = (msg.get("accessMethods") or {}).get("id", "unknown")
-            print(f"✅ [ACCESS] Access Methods empfangen (Remote ID: {remote_id})")
-            print("")
-            print("=" * 60)
-            print("💎 SHIP HANDSHAKE ERFOLGREICH BEENDET!")
-            print("=" * 60)
-            print("")
+            _LOGGER.info("✅ [ACCESS] Access Methods empfangen (Remote ID: %s)", remote_id)
+            _LOGGER.info("💎 SHIP HANDSHAKE ERFOLGREICH BEENDET!")
             return True
 
         elif (
@@ -394,4 +393,4 @@ async def perform_ship_handshake(ws, local_ship_id: str):
             and "accessMethodsRequest" not in msg
         ):
             # Falls wir im ACCESS-State sind, aber die falsche Nachricht kommt
-            print(f"⚠️  [STATE: {state}] Unerwartete Nachricht: {list(msg.keys())}")
+            _LOGGER.warning("⚠️  [STATE: %s] Unerwartete Nachricht: %s", state, list(msg.keys()))

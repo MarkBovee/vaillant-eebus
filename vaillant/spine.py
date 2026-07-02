@@ -1,8 +1,11 @@
 """SPINE datagram helpers — address builder, read/call/result senders."""
 
+import logging
 from typing import Any
 
 from . import const
+
+_LOGGER = logging.getLogger(__name__)
 from .ship import MsgCounter, _make_spine_reply_addresses, send_ship_data
 
 
@@ -25,7 +28,7 @@ async def send_spine_read(
 ):
     """Send a SPINE read datagram to the remote device."""
     try:
-        print(f"📤 [SPINE] Read send: {list(cmd.keys())}")
+        _LOGGER.info("📤 [SPINE] Read send: %s", list(cmd.keys()))
     except Exception:
         pass
     datagram: dict[str, Any] = {
@@ -57,7 +60,7 @@ async def send_spine_call(
 ):
     """Send a SPINE call datagram to the remote device."""
     try:
-        print(f"📤 [SPINE] Call send: {list(cmd.keys())}")
+        _LOGGER.info("📤 [SPINE] Call send: %s", list(cmd.keys()))
     except Exception:
         pass
     datagram: dict[str, Any] = {
@@ -111,6 +114,6 @@ async def send_spine_result_ok(
 
     await send_ship_data(ws, result_datagram)
     try:
-        print(f"📤 [SPINE] Result send: msgCounterReference={ref}")
+        _LOGGER.info("📤 [SPINE] Result send: msgCounterReference=%s", ref)
     except Exception:
         pass

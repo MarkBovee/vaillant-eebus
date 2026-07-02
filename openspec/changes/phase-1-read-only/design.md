@@ -24,7 +24,11 @@ vaillant-eebus/
 │   ├── ship.py                  # SHIP transport: TLS WebSocket, handshake, frames
 │   ├── spine.py                 # SPINE datagram: read, write, subscribe, notify
 │   ├── discovery.py             # Entity tree discovery parsing
-│   └── measurement.py           # Measurement server subscription + parsing
+│   ├── measurement.py           # Measurement server subscription + parsing
+│   └── client.py                # Persistent VR921 client state machine
+├── scripts/
+│   ├── daemon.py                # Persistent local debug daemon + HTTP API
+│   └── test_local.py            # HA lifecycle simulator / capture wrapper
 ├── docs/
 │   ├── architecture.md
 │   ├── developer.md
@@ -113,6 +117,20 @@ Device (VR921 Gateway)
 - Polls only for non-subscribable values
 - Updates `async_add_listener` entities
 
+### Development daemon
+- Separate long-lived process for local development
+- Keeps one EEBUS certificate/session alive to reduce repeated trust prompts
+- Caches:
+  - `device_info`
+  - `measurement_descriptions`
+  - `latest_measurements`
+- Exposes local HTTP endpoints:
+  - `/health`
+  - `/state`
+  - `/descriptions`
+  - `/scopes`
+- Lets wrappers and future UI/debug tools restart without reconnecting VR921 every edit
+
 ### Entities
 - All entities use `CoordinatorEntity` pattern
 - `EntityDescription` for type-safe configuration
@@ -144,6 +162,7 @@ Device (VR921 Gateway)
 - **JSONL captures** (`SHIP_JSONL=true`) as CI test fixtures — capture once, replay forever
 - **Unit tests** for certificate, SPINE parsing, measurement mapping — no network needed
 - **Mock server** optional, only if CI needs reproducible integration tests
+- **Persistent daemon** for local dev — stable session, capture state via local HTTP without repeated pairing prompts
 
 ### Fixture pipeline
 1. Run against real VR921 with `SHIP_JSONL=true`

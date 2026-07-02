@@ -1,9 +1,12 @@
 """Measurement subscribe/read — request, subscribe, parse description and list data."""
 
 import json
+import logging
 from typing import Any, cast
 
 from .ship import MsgCounter
+
+_LOGGER = logging.getLogger(__name__)
 from .spine import _spine_addr, send_spine_call, send_spine_read
 
 
@@ -113,8 +116,10 @@ def parse_measurement_description(cmd: dict[str, Any]) -> dict[int, dict[str, An
 
     if not isinstance(mdl_list, list):
         try:
-            print(
-                f"⚠️  [MEASUREMENT] measurementDescriptionListData unexpected type: {type(mdl).__name__} keys={list(mdl.keys()) if isinstance(mdl, dict) else ''}"
+            _LOGGER.warning(
+                "⚠️  [MEASUREMENT] measurementDescriptionListData unexpected type: %s keys=%s",
+                type(mdl).__name__,
+                list(mdl.keys()) if isinstance(mdl, dict) else "",
             )
         except Exception:
             pass
@@ -176,8 +181,10 @@ def parse_measurement_list(
 
     if not isinstance(ml_list, list):
         try:
-            print(
-                f"⚠️  [MEASUREMENT] measurementListData unexpected type: {type(ml).__name__} keys={list(ml.keys()) if isinstance(ml, dict) else ''}"
+            _LOGGER.warning(
+                "⚠️  [MEASUREMENT] measurementListData unexpected type: %s keys=%s",
+                type(ml).__name__,
+                list(ml.keys()) if isinstance(ml, dict) else "",
             )
         except Exception:
             pass
@@ -241,25 +248,25 @@ def parse_measurement_list(
 
         # Keep human output helpful but short
         if isinstance(scope_str, str) and ("outdoortemperature" in scope_str.lower()):
-            print(f"🌡️  Außentemperatur: {val} {unit_str} (ID {mid})")
+            _LOGGER.info("🌡️  Außentemperatur: %s %s (ID %s)", val, unit_str, mid)
             any_printed = True
         elif isinstance(scope_str, str) and ("dhwtemperature" in scope_str.lower()):
-            print(f"🚿 DHW: {val} {unit_str} (ID {mid})")
+            _LOGGER.info("🚿 DHW: %s %s (ID %s)", val, unit_str, mid)
             any_printed = True
         elif isinstance(scope_str, str) and (
             "acpowertotal" in scope_str.lower() or "power" == scope_str.lower() or "power" in scope_str.lower()
         ):
-            print(f"⚡ Leistung: {val} {unit_str} (ID {mid}, scope={scope_str})")
+            _LOGGER.info("⚡ Leistung: %s %s (ID %s, scope=%s)", val, unit_str, mid, scope_str)
             any_printed = True
         else:
-            print(f"📊 Measurement: {val} {unit_str} (scope={scope_str}, ID {mid})")
+            _LOGGER.info("📊 Measurement: %s %s (scope=%s, ID %s)", val, unit_str, scope_str, mid)
             any_printed = True
 
     if not any_printed:
         # If we got here, list existed but no usable values were found.
         try:
             sample = json.dumps(ml_list[:3], indent=2, ensure_ascii=False)
-            print(f"⚠️  [MEASUREMENT] No values parsed; sample entries:\n{sample}")
+            _LOGGER.warning("⚠️  [MEASUREMENT] No values parsed; sample entries:\n%s", sample)
         except Exception:
             pass
 
