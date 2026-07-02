@@ -17,8 +17,8 @@ Local Home Assistant integration for Vaillant heat pumps via the VR921 (sensoNET
 ## Architecture
 
 ```
-VR921 ──wss://──► eebus-sdk ──► vaillant/ ──► HA entities
-        SHIP/SPINE      transport    domain        sensors
+VR921 ──wss://──► vaillant/ ──► custom_components/ ──► HA entities
+        SHIP/SPINE   ship/spine       vaillant_eebus      sensors
 ```
 
 ## Requirements
@@ -26,7 +26,7 @@ VR921 ──wss://──► eebus-sdk ──► vaillant/ ──► HA entities
 - Vaillant heat pump with VR921 (sensoNET) gateway
 - Home Assistant 2025.x or newer
 - Network access to VR921 (mDNS must work)
-- Python 3.13+
+- Python 3.14+
 
 ## Installation
 

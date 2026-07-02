@@ -13,17 +13,15 @@
 
 ## Milestone 2: Protocol — SHIP/SPINE transport
 
-- [ ] Evaluate `ULudo/eebus-sdk` against VR921 (or use mock)
-  - If works: add as PyPI dependency
-  - If not: decide on fork or custom impl
+- [ ] Capture real VR921 traffic (`SHIP_JSONL=true`) → test fixtures
 - [ ] Implement `vaillant/certificate.py` — self-signed X.509 cert generation, SKI extraction
+- [ ] Implement `vaillant/ship.py` — TLS WebSocket connection, SHIP handshake state machine, frame encoding
+- [ ] Implement `vaillant/spine.py` — SPINE datagram read/write, EEBUS JSON conversion
 - [ ] Implement `vaillant/discovery.py` — mDNS listener for `_ship._tcp.local.`, VR921 candidate tracking
-- [ ] Implement SHIP connection: TLS WebSocket, handshake state machine
-- [ ] Implement SPINE datagram read/write (if not in SDK)
 - [ ] Implement reconnect with exponential backoff
 - [ ] Unit tests for certificate generation
-- [ ] Unit tests for discovery parsing
-- [ ] Unit tests for handshake (mock server)
+- [ ] Unit tests for SPINE datagram parsing (from JSONL fixtures)
+- [ ] Unit tests for SHIP handshake
 
 ## Milestone 3: Protocol — VR921 measurement reading
 
@@ -33,8 +31,8 @@
 - [ ] Implement measurement parsing (measurementDescriptionListData + measurementListData)
 - [ ] Map SPINE measurement IDs to HA-friendly names + units
 - [ ] Implement poll fallback for non-subscribable measurements
-- [ ] Unit tests with mock VR921 server
-- [ ] Integration test: full discovery → subscribe → read cycle
+- [ ] Unit tests with JSONL capture fixtures
+- [ ] Integration test (local): full discovery → subscribe → read cycle tegen echte VR921
 
 ## Milestone 4: HA Integration — Setup
 

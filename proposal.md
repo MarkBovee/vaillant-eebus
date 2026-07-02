@@ -24,8 +24,8 @@ A pure Python EEBUS integration solves all of these: local, low-latency, no extr
 
 ```
 ┌──────────┐  EEBUS/SHIP    ┌──────────────────┐
-│ VR921    │◄────wss:──────►│  eebus-sdk        │  ← SHIP/SPINE transport
-│ Gateway  │   mDNS/_ship   │  (ULudo)          │     mDNS, TLS, certs
+│ VR921    │◄────wss:──────►│  vaillant/        │  ← SHIP/SPINE transport
+│ Gateway  │   mDNS/_ship   │  ship.py,spine.py │     mDNS, TLS, certs
 └──────────┘                └────────┬─────────┘
                                      │
                             ┌────────▼─────────┐
@@ -46,19 +46,17 @@ A pure Python EEBUS integration solves all of these: local, low-latency, no extr
 
 | Project | Role |
 |---------|------|
-| **ULudo/eebus-sdk** (Python, Apache 2.0) | Core SHIP/SPINE transport — mDNS, TLS WebSocket, HemsClient |
 | **markusschultheis/Vaillant-VR921** (Python, no license) | Reference for VR921 entity/feature structure, SPINE datagram format |
 
 ### Dependency strategy
 
-**Primary:** PyPI dependency on `ULudo/eebus-sdk` for SHIP/SPINE.
-**Fallback:** Fork/extend SDK if VR921 private use cases aren't covered.
-**Last resort:** Ship own SHIP/SPINE implementation (based on markusschultheis reference).
+**SDK:** Eigen SHIP/SPINE implementatie — geen externe SDK dependency.
+**Reference:** `markusschultheis/Vaillant-VR921` als inspiratie (geen license → rewrite, geen copy).
 
 ### Key decisions
 
 - **Pure integration, no addon** — Docker container adds complexity with zero benefit here
-- **3-layer separation** — protocol (`eebus-sdk`), Vaillant domain (`vaillant/`), HA (`custom_components/`)
+- **3-layer separation** — protocol (`vaillant/ship.py` + `spine.py`), Vaillant domain (`vaillant/`), HA (`custom_components/`)
 - **Async from day 1** — HA requires it, EEBUS is inherently async
 - **ConfigFlow with mDNS discovery** — automatic VR921 detection, fallback to manual IP
 - **DataUpdateCoordinator** — standard HA pattern for polling + subscriptions

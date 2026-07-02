@@ -20,9 +20,11 @@ vaillant-eebus/
 ├── vaillant/
 │   ├── __init__.py
 │   ├── const.py                 # Vaillant entity/feature IDs, measurement IDs
-│   ├── discovery.py             # Entity tree discovery
-│   ├── measurement.py           # Measurement server subscription + parsing
-│   └── certificate.py           # Self-signed cert generation, SKI extraction
+│   ├── certificate.py           # Self-signed cert generation, SKI extraction
+│   ├── ship.py                  # SHIP transport: TLS WebSocket, handshake, frames
+│   ├── spine.py                 # SPINE datagram: read, write, subscribe, notify
+│   ├── discovery.py             # Entity tree discovery parsing
+│   └── measurement.py           # Measurement server subscription + parsing
 ├── docs/
 │   ├── architecture.md
 │   ├── developer.md
@@ -32,7 +34,7 @@ vaillant-eebus/
 │   └── basic_dashboard.yaml
 ├── tests/
 │   ├── __init__.py
-│   ├── conftest.py              # Fixtures, mock VR921 server
+│   ├── conftest.py              # Fixtures, JSONL capture replay, optional mock
 │   ├── test_coordinator.py
 │   ├── test_discovery.py
 │   ├── test_measurement.py
@@ -135,7 +137,26 @@ Device (VR921 Gateway)
 | Certificate expiry | Generate new, trigger re-pairing |
 | Timeout | Retry 3x, then disconnect + reconnect |
 
-## 5. Security
+## 5. Test Strategy
+
+### Approach
+- **Real VR921** for development and E2E validation (local dev only)
+- **JSONL captures** (`SHIP_JSONL=true`) as CI test fixtures — capture once, replay forever
+- **Unit tests** for certificate, SPINE parsing, measurement mapping — no network needed
+- **Mock server** optional, only if CI needs reproducible integration tests
+
+### Fixture pipeline
+1. Run against real VR921 with `SHIP_JSONL=true`
+2. Sanitize captures (redact certs, SKI, IPs)
+3. Store as `tests/fixtures/*.jsonl`
+4. Replay in CI tests
+
+### Coverage target
+- Unit: 95%+ for certificate, parsing, mapping
+- Integration: full discovery → subscribe → read cycle
+- No E2E in CI (requires physical hardware)
+
+## 6. Security
 - All communication over TLS (wss://)
 - Self-signed certificates (EEBUS standard)
 - No cloud dependency — data stays local
