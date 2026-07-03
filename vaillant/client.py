@@ -47,6 +47,9 @@ _LOGGER = logging.getLogger(__name__)
 
 FEATURE_READ_CMDS: dict[str, list[str]] = {
     "ElectricalConnection": ["electricalConnectionParameterDescriptionListData"],
+    "Setpoint": ["setpointData"],
+    "HVAC": ["hvacModeListData"],
+    "SmartEnergyManagementPs": ["deviceConfigurationData"],
 }
 
 
@@ -457,7 +460,13 @@ class VaillantClient:
                                 msg_counter=self._msg_counter,
                             )
 
-                        if cmd_classifier == "read":
+                        if cmd_classifier == "result":
+                            if "resultData" in cmd:
+                                rd = cmd.get("resultData", {})
+                                err = rd.get("errorNumber")
+                                _LOGGER.debug("📋 Call result errorNumber=%s", err)
+
+                        elif cmd_classifier == "read":
                             await handle_spine_read(
                                 ws,
                                 request_header=hdr,
@@ -637,6 +646,7 @@ class VaillantClient:
                                 cmds = FEATURE_READ_CMDS.get(ftype)
                                 if not cmds or not servers:
                                     continue
+                                sender = send_spine_read if ftype == "ElectricalConnection" else send_spine_call
                                 for server in servers:
                                     dst = {
                                         "device": remote_device_address,
@@ -644,7 +654,7 @@ class VaillantClient:
                                         "feature": int(server["feature"]),
                                     }
                                     for cmd_name in cmds:
-                                        await send_spine_read(
+                                        await sender(
                                             ws,
                                             address_source=src,
                                             address_destination=dst,

@@ -39,6 +39,7 @@ class VaillantHvacModeSelect(CoordinatorEntity[VaillantCoordinator], SelectEntit
     ) -> None:
         super().__init__(coordinator)
         self._server = server
+        self._value: str | None = None
         self._attr_unique_id = f"{entry.entry_id}_hvac_mode"
         self._attr_name = "HVAC Mode"
         self._attr_has_entity_name = True
@@ -47,7 +48,8 @@ class VaillantHvacModeSelect(CoordinatorEntity[VaillantCoordinator], SelectEntit
 
     @property
     def current_option(self) -> str | None:
-        return None
+        return self._value
 
     async def async_select_option(self, option: str) -> None:
+        self._value = option
         await self.coordinator.client.write_hvac_mode(self._server, option)

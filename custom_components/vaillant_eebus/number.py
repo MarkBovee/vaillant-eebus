@@ -37,6 +37,7 @@ class VaillantDhwSetpointNumber(CoordinatorEntity[VaillantCoordinator], NumberEn
     ) -> None:
         super().__init__(coordinator)
         self._server = server
+        self._value: float | None = None
         self._attr_unique_id = f"{entry.entry_id}_dhw_setpoint"
         self._attr_name = "DHW Target Temperature"
         self._attr_has_entity_name = True
@@ -48,7 +49,8 @@ class VaillantDhwSetpointNumber(CoordinatorEntity[VaillantCoordinator], NumberEn
 
     @property
     def native_value(self) -> float | None:
-        return None
+        return self._value
 
     async def async_set_native_value(self, value: float) -> None:
+        self._value = value
         await self.coordinator.client.write_setpoint(self._server, value)

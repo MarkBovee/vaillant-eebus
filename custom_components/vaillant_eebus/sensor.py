@@ -121,55 +121,16 @@ async def async_setup_entry(
     entities: list[VaillantSensor] = []
     seen: set[str] = set()
 
-    for object_id, data in coordinator.data.items():
-        scope = data.get("scopeType", "unknown")
-        if scope not in seen:
-            entities.append(VaillantSensor(coordinator, object_id, data, entry))
-            seen.add(scope)
-
     for scope, meta in coordinator.measurement_scopes.items():
         if scope not in seen:
-            entities.append(VaillantDescribedSensor(coordinator, scope, meta, entry))
+            entities.append(VaillantSensor(coordinator, scope, meta, entry))
             seen.add(scope)
 
     async_add_entities(entities)
 
 
 class VaillantSensor(CoordinatorEntity[VaillantCoordinator], SensorEntity):
-    """Sensor representing a live Vaillant measurement."""
-
-    def __init__(
-        self,
-        coordinator: VaillantCoordinator,
-        object_id: str,
-        data: dict[str, Any],
-        entry: ConfigEntry,
-    ) -> None:
-        """Initialize sensor."""
-        super().__init__(coordinator)
-        self._object_id = object_id
-        self._scope_type = data.get("scopeType", "unknown")
-        self._attr_unique_id = f"{entry.entry_id}_{object_id}"
-        self._attr_name = _friendly_name(self._scope_type)
-        self._attr_has_entity_name = True
-        self._attr_device_info = coordinator.device_info
-
-        metadata = _guess_metadata(self._scope_type, str(data.get("unit", "")))
-        self._attr_device_class = metadata["device_class"]
-        self._attr_state_class = metadata["state_class"]
-        self._attr_native_unit_of_measurement = data.get("unit")
-
-    @property
-    def native_value(self) -> float | int | None:
-        """Return the sensor value."""
-        data = self.coordinator.data.get(self._object_id)
-        if data is None:
-            return None
-        return data.get("value")
-
-
-class VaillantDescribedSensor(CoordinatorEntity[VaillantCoordinator], SensorEntity):
-    """Sensor for a described scope type without live data yet."""
+    """Sensor representing a Vaillant measurement scope type."""
 
     def __init__(
         self,
@@ -181,7 +142,7 @@ class VaillantDescribedSensor(CoordinatorEntity[VaillantCoordinator], SensorEnti
         """Initialize sensor."""
         super().__init__(coordinator)
         self._scope_type = scope_type
-        self._attr_unique_id = f"{entry.entry_id}_{scope_type}_described"
+        self._attr_unique_id = f"{entry.entry_id}_{scope_type}"
         self._attr_name = _friendly_name(scope_type)
         self._attr_has_entity_name = True
         self._attr_device_info = coordinator.device_info
