@@ -41,7 +41,7 @@ from .ship import (
     perform_ship_handshake,
     send_ship_json,
 )
-from .spine import _spine_addr, send_spine_read, send_spine_result_ok
+from .spine import _spine_addr, send_spine_call, send_spine_read, send_spine_result_ok
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -172,6 +172,7 @@ class VaillantClient:
         self._publish_jsonl = publish_jsonl
 
         self._ws: Any = None
+        self._remote_device_address: str | None = None
         self._aiozc: AsyncZeroconf | None = None
         self._zc_owned = True
         self._task: asyncio.Task | None = None
@@ -217,6 +218,14 @@ class VaillantClient:
     @property
     def connected(self) -> bool:
         return self._running and self._ws is not None
+
+    @property
+    def setpoint_servers(self) -> list[dict[str, Any]]:
+        return list(self._remote_setpoint_servers)
+
+    @property
+    def all_server_features(self) -> dict[str, list[dict[str, Any]]]:
+        return dict(self._remote_all_server_features)
 
     async def discover_target(
         self, *, timeout: int = 30, aiozc_instance: AsyncZeroconf | None = None
@@ -428,6 +437,7 @@ class VaillantClient:
                             dev = addr_src.get("device")
                             if isinstance(dev, str) and dev:
                                 remote_device_address = dev
+                                self._remote_device_address = dev
 
                     if remote_device_address is not None and not discovery_requested:
                         discovery_requested = True
@@ -673,6 +683,62 @@ class VaillantClient:
                     remote_measurement_feature=server,
                     msg_counter=self._msg_counter,
                 )
+
+    async def write_setpoint(
+        self, server: dict[str, Any], temperature: float
+    ) -> dict[str, Any] | None:
+        """Send SPINE call to set a temperature setpoint on Setpoint server feature."""
+        if not self._ws or not self._remote_device_address:
+            _LOGGER.warning("Cannot write setpoint: not connected")
+            return None
+        src = _spine_addr(device=self._local_device_address, entity=1, feature=1)
+        dst = {
+            "device": self._remote_device_address,
+            "entity": list(server["entity"]),
+            "feature": int(server["feature"]),
+        }
+        cmd = {
+            "setpointData": {
+                "setpoints": [{"setpointId": 0, "value": temperature, "valueType": "temperature"}]
+            }
+        }
+        await send_spine_call(
+            self._ws,
+            address_source=src,
+            address_destination=dst,
+            cmd=cmd,
+            msg_counter=self._msg_counter,
+        )
+        _LOGGER.info("📝 Setpoint written: %s → %s °C", dst, temperature)
+        return {"errorNumber": 0}
+
+    async def write_hvac_mode(
+        self, server: dict[str, Any], mode: str
+    ) -> dict[str, Any] | None:
+        """Send SPINE call to set HVAC operating mode on HVAC server feature."""
+        if not self._ws or not self._remote_device_address:
+            _LOGGER.warning("Cannot write HVAC mode: not connected")
+            return None
+        src = _spine_addr(device=self._local_device_address, entity=1, feature=1)
+        dst = {
+            "device": self._remote_device_address,
+            "entity": list(server["entity"]),
+            "feature": int(server["feature"]),
+        }
+        cmd = {
+            "hvacModeListData": {
+                "hvacMode": [{"mode": mode, "operatingMode": "normal"}]
+            }
+        }
+        await send_spine_call(
+            self._ws,
+            address_source=src,
+            address_destination=dst,
+            cmd=cmd,
+            msg_counter=self._msg_counter,
+        )
+        _LOGGER.info("📝 HVAC mode written: %s → %s", dst, mode)
+        return {"errorNumber": 0}
 
     def _process_measurement_updates(self, updates: list[dict[str, Any]]) -> None:
         for u in updates:
