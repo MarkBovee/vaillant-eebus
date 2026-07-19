@@ -11,4 +11,11 @@ CONF_SCAN_INTERVAL = "scan_interval"
 DEFAULT_EBUSD_HOST = "192.168.1.100"
 DEFAULT_EBUSD_PORT = 8888
 DEFAULT_EBUSD_POLL_INTERVAL = 30
-PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.NUMBER, Platform.SELECT, Platform.SWITCH]
+PLATFORMS = [
+    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SWITCH,
+    Platform.CLIMATE,
+]

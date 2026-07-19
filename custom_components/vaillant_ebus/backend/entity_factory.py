@@ -8,6 +8,23 @@ from .mapping import RegisterMeta, get_meta
 from .models import EbusdRegister
 
 
+def _is_hidden_register(register: EbusdRegister) -> bool:
+    """Exclude ebusd implementation/config noise from entity creation."""
+    circuit = register.circuit.lower()
+    name = register.name.lower()
+    if circuit.startswith("scan"):
+        return True
+    if circuit == "broadcast" and name != "outsidetemp":
+        return True
+    if name.startswith(("cctimer_", "hwctimer_", "z1timer_", "z2timer_", "z3timer_")):
+        return True
+    if name.startswith(("memory_", "prfuelsum", "installer", "phonenumber")):
+        return True
+    if name in {"general_valuerange", "date_time", "datetime", "vdatetime"}:
+        return True
+    return False
+
+
 class EntityDescription:
     def __init__(
         self,
@@ -38,7 +55,7 @@ class EntityDescription:
 
     @property
     def entity_type(self) -> str:
-        return self.meta.entity_type or "binary_sensor" if self._is_binary else "sensor"
+        return self.meta.entity_type or ("binary_sensor" if self._is_binary else "sensor")
 
     @property
     def _is_binary(self) -> bool:
@@ -92,7 +109,7 @@ def generate_entity_descriptions(
     entities: list[EntityDescription] = []
 
     for reg in registers:
-        if reg.circuit == "scan":
+        if _is_hidden_register(reg):
             continue
 
         for field in reg.fields:
@@ -114,6 +131,9 @@ def generate_entity_descriptions(
 
             if merged_meta.entity_type == "":
                 merged_meta.entity_type = _classify_register(reg, field, raw)
+
+            if not reg.has_data and not merged_meta.entity_category:
+                merged_meta.enabled = False
 
             if not merged_meta.enabled:
                 continue

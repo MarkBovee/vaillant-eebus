@@ -12,7 +12,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .backend.entity_factory import EntityDescription, generate_entity_descriptions
-from .backend.models import EbusdRegister
+from .backend.models import CIRCUIT_NAMES, EbusdRegister
 from .backend.tcp import EbusdTcpBackend
 from .const import (
     CONF_EBUSD_HOST,
@@ -91,12 +91,12 @@ class VaillantCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self.ebusd_backend:
             await self.ebusd_backend.async_disconnect()
 
-    @property
-    def device_info(self) -> DeviceInfo:
+    def get_device_info(self, circuit: str) -> DeviceInfo:
+        name = CIRCUIT_NAMES.get(circuit, f"Vaillant ({circuit})")
         return DeviceInfo(
-            identifiers={(DOMAIN, "vaillant_ebus")},
-            name="Vaillant eBUS (ebusd)",
+            identifiers={(DOMAIN, circuit)},
+            name=name,
             manufacturer="Vaillant",
-            model="aroTHERM",
+            model=name,
             sw_version=self.ebusd_backend.version if self.ebusd_backend else None,
         )

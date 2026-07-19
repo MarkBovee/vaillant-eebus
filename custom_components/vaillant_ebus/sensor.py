@@ -6,6 +6,7 @@ from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -46,8 +47,8 @@ class EbusdSensor(CoordinatorEntity[VaillantCoordinator], SensorEntity):
         self._desc = desc
         self._attr_unique_id = unique_id
         self._attr_has_entity_name = True
-        self._attr_device_info = coordinator.device_info
-        self._attr_name = desc.meta.friendly_name or f"{desc.circuit} {desc.name}"
+        self._attr_device_info = coordinator.get_device_info(desc.circuit)
+        self._attr_name = desc.meta.friendly_name or desc.name
         if desc.meta.device_class:
             self._attr_device_class = desc.meta.device_class
         if desc.meta.state_class:
@@ -57,10 +58,10 @@ class EbusdSensor(CoordinatorEntity[VaillantCoordinator], SensorEntity):
         if desc.meta.icon:
             self._attr_icon = desc.meta.icon
         if desc.meta.entity_category:
-            self._attr_entity_category = desc.meta.entity_category
+            self._attr_entity_category = EntityCategory(desc.meta.entity_category)
 
     @property
-    def native_value(self) -> str | float | int | None:
+    def native_value(self) -> float | int | None:
         data = self.coordinator.data.get("ebusd", {})
         raw = data.get(self._desc.key)
         if raw is None:
@@ -68,7 +69,7 @@ class EbusdSensor(CoordinatorEntity[VaillantCoordinator], SensorEntity):
         try:
             return float(raw)
         except (ValueError, TypeError):
-            return raw
+            return None
 
     @property
     def available(self) -> bool:

@@ -49,8 +49,8 @@ class EbusdBinarySensor(CoordinatorEntity[VaillantCoordinator], BinarySensorEnti
         self._desc = desc
         self._attr_unique_id = unique_id
         self._attr_has_entity_name = True
-        self._attr_device_info = coordinator.device_info
-        self._attr_name = desc.meta.friendly_name or f"{desc.circuit} {desc.name}"
+        self._attr_device_info = coordinator.get_device_info(desc.circuit)
+        self._attr_name = desc.meta.friendly_name or desc.name
         if desc.meta.icon:
             self._attr_icon = desc.meta.icon
 
