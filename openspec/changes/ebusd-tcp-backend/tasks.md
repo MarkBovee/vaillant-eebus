@@ -10,98 +10,98 @@
 
 ## 1. Project Scaffolding
 
-- [ ] 1.1 Create `custom_components/vaillant_eebus/backend/` with `__init__.py`
-- [ ] 1.2 Create `backend/base.py` with abstract `Backend` class (`async_connect`, `async_disconnect`, `async_find`, `async_read`, `async_write`, `async_poll`)
-- [ ] 1.3 Create `backend/models.py` with dataclasses (`EbusdRegister`, `Circuit`, `RegisterMeta`, `WriteResult`)
-- [ ] 1.4 Create `backend/tcp.py` — `EbusdTcpBackend` implementing `Backend` via asyncio TCP
-- [ ] 1.5 Implement TCP connection lifecycle: connect, send/receive, reconnect with backoff (1s-60s)
-- [ ] 1.6 Implement `async_find()` — send `f`, parse 362-line response into `list[EbusdRegister]`
-- [ ] 1.7 Implement `async_read(circuit, name)` — send `r <circuit> <name>`, parse response
-- [ ] 1.8 Implement `async_write(circuit, name, value)` — send `write -c <circuit> <name> <value>`, check `done`
-- [ ] 1.9 Implement read-after-write verification
-- [ ] 1.10 Create `backend/mapping.py` with default metadata (friendly names, icons, units, device_classes) for all 362 registers
+- [x] 1.1 Create `custom_components/vaillant_ebus/backend/` with `__init__.py`
+- [x] 1.2 Create `backend/base.py` with abstract `Backend` class (`async_connect`, `async_disconnect`, `async_find`, `async_read`, `async_write`, `async_poll`)
+- [x] 1.3 Create `backend/models.py` with dataclasses (`EbusdRegister`, `Circuit`, `RegisterMeta`, `WriteResult`)
+- [x] 1.4 Create `backend/tcp.py` — `EbusdTcpBackend` implementing `Backend` via asyncio TCP
+- [x] 1.5 Implement TCP connection lifecycle: connect, send/receive, reconnect with backoff (1s-60s)
+- [x] 1.6 Implement `async_find()` — send `f`, parse 362-line response into `list[EbusdRegister]`
+- [x] 1.7 Implement `async_read(circuit, name)` — send `r <circuit> <name>`, parse response
+- [x] 1.8 Implement `async_write(circuit, name, value)` — send `write -c <circuit> <name> <value>`, check `done`
+- [x] 1.9 Implement read-after-write verification
+- [x] 1.10 Create `backend/mapping.py` with default metadata (friendly names, icons, units, device_classes) for all 362 registers
 
 ## 2. Auto-Discovery
 
-- [ ] 2.1 On startup, call `async_find()` and parse all registers
-- [ ] 2.2 Classify registers: has data vs "no data stored", writable vs readonly, numeric vs enum vs boolean
-- [ ] 2.3 Create `backend/entity_factory.py` — generate HA entity descriptions from discovered registers
-- [ ] 2.4 Register type assignment:
+- [x] 2.1 On startup, call `async_find()` and parse all registers
+- [x] 2.2 Classify registers: has data vs "no data stored", writable vs readonly, numeric vs enum vs boolean
+- [x] 2.3 Create `backend/entity_factory.py` — generate HA entity descriptions from discovered registers
+- [x] 2.4 Register type assignment:
   - Numeric values → Sensor (if readonly) or Number (if writable + numeric)
   - Enum values → Sensor (if readonly) or Select (if writable + options known)
   - Boolean/OnOff → BinarySensor (if readonly) or Switch (if writable)
   - Button → for reset/refresh actions
-- [ ] 2.5 Implement `entities.yaml` loading from `<ha-config>/vaillant_eebus/entities.yaml`
-- [ ] 2.6 Implement YAML override merging (friendly_name, icon, unit, device_class, min/max/step, enabled, writable)
-- [ ] 2.7 Implement deduplication — single entity per register+field
-- [ ] 2.8 Implement `rediscover` — reconnect, re-run `find`, merge new registers
+- [x] 2.5 Implement `entities.yaml` loading from `<ha-config>/vaillant_ebus/entities.yaml`
+- [x] 2.6 Implement YAML override merging (friendly_name, icon, unit, device_class, min/max/step, enabled, writable)
+- [x] 2.7 Implement deduplication — single entity per register+field
+- [x] 2.8 Implement `rediscover` — reconnect, re-run `find`, merge new registers
 
 ## 3. Config Flow & Options
 
-- [ ] 3.1 Update `config_flow.py` — add backend selection (ebusd TCP / EEBUS supplement / both)
-- [ ] 3.2 Add ebusd host/port config (defaults: 192.168.1.100, 8888)
-- [ ] 3.3 Add connection test step (connect to ebusd, run `i`)
-- [ ] 3.4 Add options flow: poll interval, entities.yaml path, write timeout
-- [ ] 3.5 Add runtime reload support for config changes
+- [x] 3.1 Update `config_flow.py` — add backend selection (ebusd TCP / EEBUS supplement / both)
+- [x] 3.2 Add ebusd host/port config (defaults: 192.168.1.100, 8888)
+- [x] 3.3 Add connection test step (connect to ebusd, run `i`)
+- [x] 3.4 Add options flow: poll interval, entities.yaml path, write timeout
+- [x] 3.5 Add runtime reload support for config changes
 
 ## 4. Sensor Platform
 
-- [ ] 4.1 Create `sensor.py` — dynamic sensor platform from discovered registers
-- [ ] 4.2 Implement device_class inference from register metadata + YAML overrides:
+- [x] 4.1 Create `sensor.py` — dynamic sensor platform from discovered registers
+- [x] 4.2 Implement device_class inference from register metadata + YAML overrides:
   - Temperature values → DEVICE_CLASS_TEMPERATURE
   - Pressure values → DEVICE_CLASS_PRESSURE
   - Energy values → DEVICE_CLASS_ENERGY
   - Power values → DEVICE_CLASS_POWER
   - Duration values → DEVICE_CLASS_DURATION
   - Enum/string values → no device_class
-- [ ] 4.3 Set state_class: `measurement` for live values, `total_increasing` for counters
-- [ ] 4.4 Set entity_category: `diagnostic` for rarely-changing values (config, firmware, serial)
-- [ ] 4.5 Unique ID: `ebusd_<circuit>_<name>_<field>` (field omitted when single-field)
+- [x] 4.3 Set state_class: `measurement` for live values, `total_increasing` for counters
+- [x] 4.4 Set entity_category: `diagnostic` for rarely-changing values (config, firmware, serial)
+- [x] 4.5 Unique ID: `ebusd_<circuit>_<name>_<field>` (field omitted when single-field)
 
 ## 5. Binary Sensor Platform
 
-- [ ] 5.1 Create `binary_sensor.py` — dynamic binary sensor platform
-- [ ] 5.2 Map known binary states (pumpstate=on/off, hcmode=day/night, disablehc=0/1)
-- [ ] 5.3 Device classes: PROBLEM (error), RUNNING (compressor/pump), HEAT (heating), COLD (cooling)
+- [x] 5.1 Create `binary_sensor.py` — dynamic binary sensor platform
+- [x] 5.2 Map known binary states (pumpstate=on/off, hcmode=day/night, disablehc=0/1)
+- [x] 5.3 Device classes: PROBLEM (error), RUNNING (compressor/pump), HEAT (heating), COLD (cooling)
 
 ## 6. Control Platforms
 
-- [ ] 6.1 Create `number.py` — Number entities for writable numeric registers
-- [ ] 6.2 Implement min/max/step from YAML overrides or register metadata
-- [ ] 6.3 Create `select.py` — Select entities for writable enum registers
-- [ ] 6.4 Implement option list from register metadata or YAML
-- [ ] 6.5 Create `switch.py` — Switch entities for writable boolean registers (disablehc, disablehwctapping, etc.)
-- [ ] 6.6 Implement readonly protection — block writes on registers not marked writable
+- [x] 6.1 Create `number.py` — Number entities for writable numeric registers
+- [x] 6.2 Implement min/max/step from YAML overrides or register metadata
+- [x] 6.3 Create `select.py` — Select entities for writable enum registers
+- [x] 6.4 Implement option list from register metadata or YAML
+- [x] 6.5 Create `switch.py` — Switch entities for writable boolean registers (disablehc, disablehwctapping, etc.)
+- [x] 6.6 Implement readonly protection — block writes on registers not marked writable
 
 ## 7. HA Services
 
-- [ ] 7.1 Register `read_parameter` service — return current value by circuit.name[.field]
-- [ ] 7.2 Register `write_parameter` service — write value with validation + verification
-- [ ] 7.3 Register `refresh` service — force re-read of all active registers
-- [ ] 7.4 Register `rediscover` service — re-run `find` entity discovery
-- [ ] 7.5 Add service schemas in `services.yaml`
+- [x] 7.1 Register `read_parameter` service — return current value by circuit.name[.field]
+- [x] 7.2 Register `write_parameter` service — write value with validation + verification
+- [x] 7.3 Register `refresh` service — force re-read of all active registers
+- [x] 7.4 Register `rediscover` service — re-run `find` entity discovery
+- [x] 7.5 Add service schemas in `services.yaml`
 
 ## 8. Coordinator & Backend Wiring
 
-- [ ] 8.1 Update `coordinator.py` — `DataUpdateCoordinator` that selects backend from config
-- [ ] 8.2 Implement poll loop: every N seconds, read all active registers via TCP
-- [ ] 8.3 Implement availability: mark entities unavailable on connection loss
-- [ ] 8.4 Wire entity platforms to coordinator for state management
-- [ ] 8.5 Wire backend to `__init__.py` setup/unload lifecycle
+- [x] 8.1 Update `coordinator.py` — `DataUpdateCoordinator` that selects backend from config
+- [x] 8.2 Implement poll loop: every N seconds, read all active registers via TCP
+- [x] 8.3 Implement availability: mark entities unavailable on connection loss
+- [x] 8.4 Wire entity platforms to coordinator for state management
+- [x] 8.5 Wire backend to `__init__.py` setup/unload lifecycle
 
 ## 9. Error Handling
 
-- [ ] 9.1 Connection loss: auto-reconnect with exponential backoff, entities unavailable
-- [ ] 9.2 ebusd restart: detect via connection drop, re-discover on reconnect
-- [ ] 9.3 Timeout: abort request, retry on next poll cycle
-- [ ] 9.4 Unknown register: ignore, log DEBUG
+- [x] 9.1 Connection loss: auto-reconnect with exponential backoff, entities unavailable
+- [x] 9.2 ebusd restart: detect via connection drop, re-discover on reconnect
+- [x] 9.3 Timeout: abort request, retry on next poll cycle
+- [x] 9.4 Unknown register: ignore, log DEBUG
 
 ## 10. Diagnostics
 
-- [ ] 10.1 Update `diagnostics.py` — TCP connection status, last command, reconnect count
-- [ ] 10.2 Include discovered circuits with register count per circuit
-- [ ] 10.3 Include ebusd version, firmware versions of all slaves
-- [ ] 10.4 Include error counts (timeouts, connection losses, write failures)
+- [x] 10.1 Update `diagnostics.py` — TCP connection status, last command, reconnect count
+- [x] 10.2 Include discovered circuits with register count per circuit
+- [x] 10.3 Include ebusd version, firmware versions of all slaves
+- [x] 10.4 Include error counts (timeouts, connection losses, write failures)
 
 ## 11. EEBUS Supplement Integration
 

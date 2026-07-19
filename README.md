@@ -18,7 +18,7 @@ Local Home Assistant integration for Vaillant heat pumps via the VR921 (sensoNET
 
 ```
 VR921 ──wss://──► vaillant/ ──► custom_components/ ──► HA entities
-        SHIP/SPINE   ship/spine       vaillant_eebus      sensors
+        SHIP/SPINE   ship/spine       vaillant_ebus      sensors
 ```
 
 ## Local Daemon For Development
@@ -88,7 +88,7 @@ This simulates:
 ### Manual
 
 1. Download latest release
-2. Extract `custom_components/vaillant_eebus` to your HA `config/custom_components/`
+2. Extract `custom_components/vaillant_ebus` to your HA `config/custom_components/`
 3. Restart Home Assistant
 4. Add the integration via Settings → Devices & Services
 

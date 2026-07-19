@@ -1,6 +1,6 @@
 {
   "name": "Vaillant EEBUS",
-  "filename": "vaillant_eebus.zip",
+  "filename": "vaillant_ebus.zip",
   "hide_default_branch": true,
   "homeassistant": "2025.1.0",
   "render_readme": true,

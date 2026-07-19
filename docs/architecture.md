@@ -3,7 +3,7 @@
 ## Overview
 
 ```text
-VR921 <-> SHIP/TLS/WebSocket <-> vaillant/ <-> custom_components/vaillant_eebus <-> Home Assistant
+VR921 <-> SHIP/TLS/WebSocket <-> vaillant/ <-> custom_components/vaillant_ebus <-> Home Assistant
 ```
 
 ## Layers
@@ -13,7 +13,7 @@ VR921 <-> SHIP/TLS/WebSocket <-> vaillant/ <-> custom_components/vaillant_eebus 
 - `vaillant/discovery.py`: entity and feature discovery
 - `vaillant/measurement.py`: measurement description and value parsing
 - `vaillant/client.py`: persistent session lifecycle
-- `custom_components/vaillant_eebus/`: Home Assistant integration
+- `custom_components/vaillant_ebus/`: Home Assistant integration
 - `scripts/daemon.py`: local development daemon with cached HTTP state
 
 ## Development flow

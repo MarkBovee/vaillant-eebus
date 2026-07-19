@@ -2,19 +2,20 @@
   "config": {
     "step": {
       "user": {
+        "title": "Vaillant eBUS (ebusd)",
         "data": {
-          "host": "Host",
-          "port": "Port",
+          "ebusd_host": "Host",
+          "ebusd_port": "Port",
           "scan_interval": "Update interval (seconds)"
         }
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect",
+      "cannot_connect": "Failed to connect to ebusd",
       "unknown": "Unexpected error"
     },
     "abort": {
-      "cannot_connect": "Cannot connect to Vaillant VR921",
+      "cannot_connect": "Cannot connect to ebusd",
       "unknown": "Unexpected error"
     }
   }

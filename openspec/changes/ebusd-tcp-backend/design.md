@@ -2,10 +2,10 @@
 
 EEBUS (VR921) integration limited to 4 measurements — confirmed. EBUS via ebusd provides complete heat pump telemetry. ebusd runs as HA addon on local network.
 
-This integration adds an **ebusd TCP backend** to `vaillant_eebus`, building a custom HA component that talks directly to ebusd via its binary TCP protocol (port 8888). No MQTT broker dependency, no addon, no cloud.
+This integration adds an **ebusd TCP backend** to `vaillant_ebus`, building a custom HA component that talks directly to ebusd via its binary TCP protocol (port 8888). No MQTT broker dependency, no addon, no cloud.
 
 Current state:
-- EEBUS backend in `vaillant/` (protocol) + `custom_components/vaillant_eebus/` (HA layer)
+- EEBUS backend in `vaillant/` (protocol) + `custom_components/vaillant_ebus/` (HA layer)
 - 4 EEBUS measurements proven, 15 described but never live
 - ebusd addon runs on HA server (192.168.1.100), accessible via TCP port 8888
 - 362 registers discovered via `find`, organised in circuits: `hmu`, `ctlv2`, `Broadcast`, `scan.*`, `vwz`
@@ -42,7 +42,7 @@ Current state:
 
 5. **Write via direct TCP command** — `write -c <circuit> <name> <value>` over TCP socket. Read-after-write for verification. Rationale: verified in `ebusctl` documentation, no MQTT publish needed.
 
-6. **entities.yaml** — Loaded from `config/vaillant_eebus/entities.yaml`. Overrides auto-detected metadata (friendly name, icon, unit, device_class, writable, min/max/step). Rationale: user-tunable without code changes.
+6. **entities.yaml** — Loaded from `config/vaillant_ebus/entities.yaml`. Overrides auto-detected metadata (friendly name, icon, unit, device_class, writable, min/max/step). Rationale: user-tunable without code changes.
 
 7. **HA services over entities as primary control** — Services (`read_parameter`, `write_parameter`, `refresh`, `rediscover`) work regardless of entity configuration. Number/Select/Switch/Button entities are for UI convenience.
 
@@ -219,7 +219,7 @@ Captured via TCP `find` command against live ebusd + `r` reads.
 
 ## entities.yaml format
 ```yaml
-# <ha-config>/vaillant_eebus/entities.yaml
+# <ha-config>/vaillant_ebus/entities.yaml
 # Overrides per circuit.name.field
 ctlv2.HwcTempDesired:
   friendly_name: "DHW Target Temperature"
