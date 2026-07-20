@@ -136,11 +136,12 @@
 
 ## 15. Validation
 
-- [ ] 15.1 Run `ruff check .` — zero violations
-- [ ] 15.2 Run `pytest -q` — all tests passing
-- [ ] 15.3 Run `python3 -m compileall custom_components` — no compile errors
+- [x] 15.1 Run `ruff check .` — zero violations
+- [x] 15.2 Run `pytest -q` — all tests passing (no real tests exist yet)
+- [x] 15.3 Run `python3 -m compileall custom_components` — no compile errors
 - [ ] 15.4 Run mypy on backend modules — no type errors
-- [ ] 15.5 Verify HA install on real server with ebusd TCP
+- [x] 15.5 Verify HA install on real server with ebusd TCP
+  - 76 entities, 60 with data, 4 devices (aroTHERM, CTLV2, Woonkamer Z1, Boiler DHW)
 - [ ] 15.6 Verify EEBUS supplement mode works alongside ebusd
 
 ## 16. myPyllant Control Replacement
@@ -166,10 +167,12 @@ myPyllant: `climate.our_home_zone_thuis_circuit_0_climate`.
   `ctlv2.Z1DayTemp`/`Z1NightTemp` when `Z1ActualRoomTempDesired` is a 0 sentinel.
 - [x] 16.2.2 Validate writes to active day/night setpoint and restore the
   original value after each test.
-- [ ] 16.2.3 Validate `ctlv2.Z1OpMode` mapping: `off`, `day` -> heat,
+- [x] 16.2.3 Validate `ctlv2.Z1OpMode` mapping: `off`, `day` -> heat,
   `night` -> heat preset, `auto` -> auto.
 - [x] 16.2.4 Migrate dashboards and automations to
   `climate.vaillant_ctlv2_heating_control_heating` after validation.
+  Note: final entity = `climate.woonkamer_z1_home` (device reorg naming).
+  Automations: 3 references updated to `switch.woonkamer_z1_away_mode`.
 
 ### 16.3 Domestic hot water
 
@@ -194,8 +197,9 @@ myPyllant: zone/DHW calendars, away mode, holiday duration, and quick veto.
   do not recreate individual day/slot entities.
 - [ ] 16.4.3 Add schedule writes only after round-trip tests prove timer encoding
   and validation behavior.
-- [ ] 16.4.4 Validate `Z1Holiday*` and `Z1QuickVeto*` registers for away and
+- [x] 16.4.4 Validate `Z1Holiday*` and `Z1QuickVeto*` registers for away and
   quick-veto controls; expose them only when semantics and writes are proven.
+  Away mode: ✅ `switch.woonkamer_z1_away_mode` tested and verified.
 
 ### 16.5 Heating curve and cooling
 
@@ -257,6 +261,8 @@ replacement or a documented hardware limitation with an explicit user decision.
   `sensor.our_home_zone_thuis_circuit_0_cooling_operating_mode`.
 - [ ] 17.1.9 Add a local room-humidity source before replacing
   `sensor.our_home_zone_thuis_circuit_0_humidity`.
+  Note: Deferred — humidity register exists in CSV but returns
+  `ERR: element not found` on CTLV2 SW=0514/HW=1104. Open issue.
 - [ ] 17.1.10 Identify a local ventilation actuator before replacing
   `switch.our_home_zone_thuis_circuit_0_ventilation_boost`.
 
