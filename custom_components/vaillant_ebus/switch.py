@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import date, datetime
 from typing import Any
 
@@ -13,6 +14,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import VaillantCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 SWITCH_ON_VALUES = {"1", "on", "true", "yes"}
 FAR_FUTURE = "01.01.2099"
@@ -70,14 +73,17 @@ class EbusdSwitch(CoordinatorEntity[VaillantCoordinator], SwitchEntity):
         await self._write("0")
 
     async def _write(self, value: str) -> None:
-        if self.coordinator.ebusd_backend:
-            result = await self.coordinator.ebusd_backend.async_write(
-                self._desc.circuit,
-                self._desc.name,
-                value,
-            )
-            if result.success:
-                await self.coordinator.async_request_refresh()
+        if not self.coordinator.ebusd_backend:
+            return
+        result = await self.coordinator.ebusd_backend.async_write(
+            self._desc.circuit,
+            self._desc.name,
+            value,
+        )
+        if result.success:
+            await self.coordinator.async_request_refresh()
+        else:
+            _LOGGER.warning("Write failed for %s: %s", self._desc.key, result.error_message)
 
 
 def _parse_date(raw: str | None) -> date | None:

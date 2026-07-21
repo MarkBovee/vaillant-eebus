@@ -121,8 +121,8 @@ class VaillantCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         self.registers[key].value["value"] = value
                         self.registers[key].has_data = True
                     _LOGGER.debug("Fallback read %s = %s", key, value)
-            except Exception:
-                _LOGGER.debug("Fallback read failed: %s", key)
+            except Exception as exc:
+                _LOGGER.warning("Fallback read failed: %s (%s)", key, exc)
         if added:
             self.entities = generate_entity_descriptions(list(self.registers.values()))
         _LOGGER.info("Fallback: %d/%d known registers re-read (%d added, %d had data)",
@@ -139,7 +139,11 @@ class VaillantCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self.ebusd_backend and self.ebusd_backend.connected:
             try:
                 discovered = await self.ebusd_backend.async_find()
-                self.registers = {reg.key: reg for reg in discovered}
+                for reg in discovered:
+                    if reg.has_data:
+                        self.registers[reg.key] = reg
+                    elif reg.key not in self.registers:
+                        self.registers[reg.key] = reg
                 await self._fallback_read()
                 return {"ebusd": self._values_from_registers()}
             except ConnectionError:

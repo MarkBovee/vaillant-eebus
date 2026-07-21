@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from homeassistant.components.select import SelectEntity
@@ -12,6 +13,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import VaillantCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -56,11 +59,18 @@ class EbusdSelect(CoordinatorEntity[VaillantCoordinator], SelectEntity):
         return str(raw) if raw is not None else None
 
     async def async_select_option(self, option: str) -> None:
-        if self.coordinator.ebusd_backend:
-            result = await self.coordinator.ebusd_backend.async_write(
-                self._desc.circuit,
-                self._desc.name,
-                option,
+        if self._attr_options and option not in self._attr_options:
+            raise ValueError(
+                f"Option '{option}' not valid for {self._desc.key}. Valid options: {self._attr_options}"
             )
-            if result.success:
-                await self.coordinator.async_request_refresh()
+        if not self.coordinator.ebusd_backend:
+            return
+        result = await self.coordinator.ebusd_backend.async_write(
+            self._desc.circuit,
+            self._desc.name,
+            option,
+        )
+        if result.success:
+            await self.coordinator.async_request_refresh()
+        else:
+            _LOGGER.warning("Write failed for %s: %s", self._desc.key, result.error_message)

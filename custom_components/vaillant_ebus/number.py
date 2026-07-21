@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from homeassistant.components.number import NumberEntity
@@ -12,6 +13,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import VaillantCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -65,11 +68,18 @@ class EbusdNumber(CoordinatorEntity[VaillantCoordinator], NumberEntity):
             return None
 
     async def async_set_native_value(self, value: float) -> None:
-        if self.coordinator.ebusd_backend:
-            result = await self.coordinator.ebusd_backend.async_write(
-                self._desc.circuit,
-                self._desc.name,
-                str(value),
+        if value < self._attr_native_min_value or value > self._attr_native_max_value:
+            raise ValueError(
+                f"Value {value} not in [{self._attr_native_min_value}, {self._attr_native_max_value}]"
             )
-            if result.success:
-                await self.coordinator.async_request_refresh()
+        if not self.coordinator.ebusd_backend:
+            return
+        result = await self.coordinator.ebusd_backend.async_write(
+            self._desc.circuit,
+            self._desc.name,
+            str(value),
+        )
+        if result.success:
+            await self.coordinator.async_request_refresh()
+        else:
+            _LOGGER.warning("Write failed for %s: %s", self._desc.key, result.error_message)
