@@ -394,6 +394,7 @@ REGISTER_MAP: dict[str, RegisterMeta] = {
     ),
     "ctlv2.Hc1Status": RegisterMeta(
         friendly_name="Status (HC1)",
+        entity_type="sensor",
         icon="mdi:information",
     ),
     "ctlv2.Hc1CircuitType": RegisterMeta(
@@ -498,6 +499,7 @@ REGISTER_MAP: dict[str, RegisterMeta] = {
     ),
     "ctlv2.Hc2Status": RegisterMeta(
         friendly_name="Status (HC2)",
+        entity_type="sensor",
         icon="mdi:information",
     ),
     "ctlv2.Hc2CircuitType": RegisterMeta(
@@ -606,6 +608,7 @@ REGISTER_MAP: dict[str, RegisterMeta] = {
     ),
     "ctlv2.Hc3Status": RegisterMeta(
         friendly_name="Status (HC3)",
+        entity_type="sensor",
         icon="mdi:information",
     ),
     "ctlv2.Hc3CircuitType": RegisterMeta(
@@ -700,6 +703,7 @@ REGISTER_MAP: dict[str, RegisterMeta] = {
     ),
     "ctlv2.HwcParallelLoading": RegisterMeta(
         friendly_name="DHW Parallel Loading",
+        entity_type="binary_sensor",
         icon="mdi:water-boiler",
     ),
     "ctlv2.HwcSfMode": RegisterMeta(
