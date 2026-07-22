@@ -4,11 +4,17 @@ Home Assistant integration for Vaillant heat pumps via **direct ebusd TCP** — 
 
 Reads & writes 350+ eBUS registers from your heat pump, heating controller, and DHW system. Fully local, no internet required.
 
+A **1-on-1 replacement for the mypyllant API integration** — climate entities (quick veto, away mode via calendar), water_heater entities (DHW boost, temp control), room humidity, and all sensors, fully local without cloud dependency.
+
 ## Features
 
+- Drop-in replacement for mypyllant API integration — same entities, no cloud
 - Direct TCP connection to ebusd — zero MQTT setup required
 - Auto-discovers all registers on connect
 - 60+ entity types generated: sensor, binary_sensor, number, select, switch, climate, water_heater, calendar
+- Climate entities with quick veto and away mode (calendar-based scheduling)
+- Water heater entities with DHW boost and temperature control
+- Room humidity (CTLV2) — not available via standard ebusd MQTT
 - Read & write any register via HA services (`vaillant_ebus.read_parameter`, `vaillant_ebus.write_parameter`)
 - Custom registers via `--enabledefine` (e.g. room humidity)
 - YAML overrides for entity metadata (names, icons, units)
