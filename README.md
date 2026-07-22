@@ -13,32 +13,24 @@ Reads & writes 350+ eBUS registers from your heat pump, heating controller, and 
 - Custom registers via `--enabledefine` (e.g. room humidity)
 - YAML overrides for entity metadata (names, icons, units)
 
-## Requirements
+## Prerequisites
 
-- Home Assistant 2025.1+ (recommended)
-- ebusd — install as HA addon or standalone on your network
+- Home Assistant 2025.1+
+- **ebusd** — eBUS daemon, installed and running
 - Vaillant heat pump with eBUS adapter (network or serial)
 
-## Installation
+> This integration is a **client for ebusd**. You need ebusd running before adding this integration.
 
-### HACS (recommended)
+## Step 1: Install ebusd
 
-1. Go to HACS → Integrations → three-dot menu → Custom repositories
-2. Repository URL: `https://github.com/MarkBovee/vaillant-ebus`
-3. Category: Integration
-4. Click Add, then install "Vaillant eBUS" from HACS
-5. **Restart HA**
-6. Go to Settings → Devices & Services → Add Integration → search "Vaillant eBUS"
+ebusd is available as an HA addon or standalone. The addon is the easiest route.
 
-### Manual
+### HA addon (recommended)
 
-1. Copy `custom_components/vaillant_ebus/` to your HA `config/custom_components/vaillant_ebus/`
-2. Restart HA
-3. Add integration via Settings → Devices & Services → Add Integration → Vaillant eBUS
-
-## ebusd addon configuration
-
-**Settings → Add-ons → ebusd → Configuration:**
+1. Go to **Settings → Add-ons → Add-on store**
+2. Add this repository as an external addon: `https://github.com/john30/ebusd-addon`
+3. Install **ebusd**
+4. Go to **Configuration** and set:
 
 ```yaml
 network_device: ens:192.168.x.x:9999
@@ -52,21 +44,47 @@ commandline_options:
 
 | Setting | Purpose |
 |---------|---------|
-| `network_device` | Your eBUS adapter (network or serial) |
-| `seed_mqtt_cfg: false` | Disable MQTT — no broker needed |
+| `network_device` | Your eBUS adapter: `ens:<ip>:<port>` for network adapters, or `/dev/ttyUSB0` for serial |
+| `seed_mqtt_cfg: false` | Disable MQTT — not needed |
 | `--accesslevel=*` | Full read/write access |
 | `--scanconfig` | Scans for additional registers (recommended) |
 | `--port=8888` | Raw TCP port — this integration connects here |
 | `--enabledefine` | Allows runtime register defines (e.g. room humidity) |
 
-Do **not** add `--mqttjson`, `--mqttint`, or `--configpath` — this integration uses raw TCP only.
+Do **not** add `--mqttjson`, `--mqttint`, or `--configpath`.
 
-## Integration setup
+5. **Start** the ebusd addon
+6. Verify it's running: open the addon log — you should see no errors
 
-1. After installation & restart, go to Settings → Devices & Services → Add Integration
-2. Search for "Vaillant eBUS"
-3. Enter ebusd host and TCP port (default: `8888`)
-4. Submit — integration connects and auto-discovers all registers
+### Standalone
+
+If ebusd runs on a separate machine or bare-metal:
+
+```bash
+ebusd --device=ens:192.168.1.100:9999 --port=8888 --accesslevel=* --enabledefine
+```
+
+## Step 2: Install this integration
+
+### HACS (recommended)
+
+1. Go to **HACS → Integrations → three-dot menu → Custom repositories**
+2. Repository URL: `https://github.com/MarkBovee/vaillant-ebus`
+3. Category: **Integration**
+4. Click **Add**, then install **"Vaillant eBUS"** from HACS
+5. **Restart HA**
+
+### Manual
+
+1. Copy `custom_components/vaillant_ebus/` to `config/custom_components/vaillant_ebus/`
+2. Restart HA
+
+## Step 3: Add integration
+
+1. Go to **Settings → Devices & Services → Add Integration**
+2. Search for **"Vaillant eBUS"**
+3. Enter your ebusd host and TCP port (default: `8888`)
+4. Submit — the integration connects and auto-discovers all registers
 5. Devices appear within 30 seconds
 
 ### Expected devices

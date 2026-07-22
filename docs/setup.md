@@ -3,34 +3,42 @@
 ## Prerequisites
 
 - Home Assistant running (core or supervised)
-- ebusd installed — either as HA addon or standalone on your network
+- **ebusd** installed and running (HA addon or standalone)
 - Heat pump with eBUS adapter connected to ebusd
-- ebusd configured with `--port=8888` (raw TCP, no MQTT needed)
 
-## ebusd addon configuration
+> This integration is a client for **ebusd**. Install and configure ebusd first.
 
-Navigate to **Settings → Add-ons → ebusd → Configuration** and set:
+## Step 1: Install ebusd
+
+### HA addon (recommended)
+
+1. Go to **Settings → Add-ons → Add-on store**
+2. Add external repository: `https://github.com/john30/ebusd-addon`
+3. Install **ebusd**
+4. Go to **Configuration** and set:
 
 ```yaml
 network_device: ens:192.168.1.100:9999
 seed_mqtt_cfg: false
 commandline_options:
   - "--accesslevel=*"
+  - "--scanconfig"
   - "--port=8888"
   - "--enabledefine"
 ```
-
-### Explanation
 
 | Setting | Why |
 |---------|-----|
 | `network_device` | Points to your eBUS adapter: `ens:<ip>:<port>` for network adapters, or a serial path like `/dev/ttyUSB0` |
 | `seed_mqtt_cfg: false` | Prevents ebusd from starting its MQTT client — not needed for raw TCP |
 | `--accesslevel=*` | Grants full read and write to all registers |
+| `--scanconfig` | Scans for additional registers (recommended) |
 | `--port=8888` | Opens the raw TCP command port — this is what the integration connects to |
 | `--enabledefine` | Allows runtime `define` commands (used for custom registers like room humidity) |
 
-> Do not add `--mqttjson`, `--mqttint`, or `--configpath` — the integration handles everything via raw TCP. `--scanconfig` is optional but recommended for broader register discovery.
+> Do not add `--mqttjson`, `--mqttint`, or `--configpath` — this integration uses raw TCP only.
+
+5. **Start** the ebusd addon.
 
 ### Standalone ebusd (no HA addon)
 
@@ -40,14 +48,16 @@ If ebusd runs on a separate machine or bare-metal:
 ebusd --device=ens:192.168.1.100:9999 --port=8888 --accesslevel=* --enabledefine
 ```
 
-## Integration setup steps
+## Step 2: Install this integration
 
-1. Install the integration via HACS or manually (see [README](../README.md))
-2. **Restart HA** if not done yet
-3. Go to **Settings → Devices & Services → Add Integration**
-4. Search for **"Vaillant eBUS"**
-5. Enter your ebusd host and TCP port (default: `8888`)
-6. Submit — wait 30 seconds for devices to appear
+Follow the [README](../README.md) — HACS or manual install.
+
+## Step 3: Add integration
+
+1. Go to **Settings → Devices & Services → Add Integration**
+2. Search for **"Vaillant eBUS"**
+3. Enter your ebusd host and TCP port (default: `8888`)
+4. Submit — wait 30 seconds for devices to appear
 
 ## Verifying the connection
 
