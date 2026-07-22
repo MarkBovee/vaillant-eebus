@@ -13,7 +13,7 @@
 ### HA addon (recommended)
 
 1. Go to **Settings → Add-ons → Add-on store**
-2. Add external repository: `https://github.com/LukasGrebe/ha-addons/`
+2. Add external repository: `https://github.com/LukasGrebe/ha-addons/` (HA wrapper for [john30/ebusd](https://github.com/john30/ebusd))
 3. Install **ebusd**
 4. Go to **Configuration** and set:
 
