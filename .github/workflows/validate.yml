@@ -15,8 +15,7 @@ jobs:
         with:
           python-version: "3.14"
       - name: Install deps
-        run: |
-          pip install ruff pytest homeassistant
+        run: pip install ruff
       - name: Ruff
         run: ruff check .
       - name: Compile check
