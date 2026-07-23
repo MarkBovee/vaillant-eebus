@@ -98,7 +98,8 @@ class VaillantCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return
         known_missing = [
             key for key in REGISTER_MAP
-            if key not in self.registers or not self.registers[key].has_data
+            if REGISTER_MAP[key].enabled
+            and (key not in self.registers or not self.registers[key].has_data)
         ]
         if not known_missing:
             return
