@@ -77,7 +77,7 @@ class VaillantCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         self.entities = generate_entity_descriptions(discovered, active_zone_circuits=self._active_zone_circuits)
 
-    # Define runtime registers (e.g. z1RoomHumidity) on ebusd
+        await self._fallback_read()    # Define runtime registers (e.g. z1RoomHumidity) on ebusd
     async def _define_custom_registers(self) -> None:
         if not self.ebusd_backend:
             return

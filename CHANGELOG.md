@@ -10,6 +10,14 @@
 - Match secondary zone registers by name suffix (`PumpStatus_hc2`) and prefix
   (`hc2FlowTemp`) in addition to circuit name
 - Remove dead `pass` block in `_classify_register`
+- Fix integration not loading on startup: catch ebusd connect failure gracefully
+  in coordinator instead of raising ConfigEntryNotReady
+- Add empty string `""` to sensor empty-value checks for HA 2026.7+ strict
+  validation
+- Cache last sensor value in memory so humidity shows previous reading instead
+  of "unknown" during startup
+- Call `_fallback_read()` in `async_start()` so custom registers (z1RoomHumidity)
+  are available from the first poll cycle, not the second
 
 ## 1.0.8 - 2026-07-24
 
