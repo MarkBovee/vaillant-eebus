@@ -24,8 +24,14 @@ def _infer_device_circuit(circuit: str, name: str) -> str | None:
     return None
 
 
+SECONDARY_ZONE_CIRCUITS = {"hc2", "hc3", "z2", "z3"}
+
+
 # Return True if register should not generate an HA entity
-def _is_hidden_register(register: EbusdRegister) -> bool:
+def _is_hidden_register(
+    register: EbusdRegister,
+    active_zone_circuits: set[str] | None = None,
+) -> bool:
     circuit = register.circuit
     name = register.name.lower()
     if f"{register.circuit}.{register.name}" in HIDDEN_REGISTERS:
@@ -44,8 +50,7 @@ def _is_hidden_register(register: EbusdRegister) -> bool:
         return True
     if circuit == "Broadcast" and name.lower() in HIDDEN_BROADCAST:
         return True
-    if name.startswith(("hc2", "hc3", "z2", "z3")):
-        # ponytail: single-zone system (HC1+Z1 only). Remove for multi-zone setups.
+    if circuit in SECONDARY_ZONE_CIRCUITS and not (active_zone_circuits and circuit in active_zone_circuits):
         return True
     return False
 
@@ -146,13 +151,14 @@ def _classify_register(
 def generate_entity_descriptions(
     registers: list[EbusdRegister],
     yaml_overrides: dict[str, dict[str, Any]] | None = None,
+    active_zone_circuits: set[str] | None = None,
 ) -> list[EntityDescription]:
     overrides = yaml_overrides or {}
     seen: set[str] = set()
     entities: list[EntityDescription] = []
 
     for reg in registers:
-        if _is_hidden_register(reg):
+        if _is_hidden_register(reg, active_zone_circuits):
             continue
 
         for field in reg.fields:

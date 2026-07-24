@@ -34,6 +34,7 @@ class VaillantCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.ebusd_backend: EbusdTcpBackend | None = None
         self.registers: dict[str, EbusdRegister] = {}
         self.entities: list[EntityDescription] = []
+        self._active_zone_circuits: set[str] = set()
         self._started = False
 
         scan_interval = entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_EBUSD_POLL_INTERVAL)
@@ -64,7 +65,13 @@ class VaillantCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.registers[reg.key] = reg
         _LOGGER.info("Discovered %d ebusd registers", len(discovered))
 
-        self.entities = generate_entity_descriptions(discovered)
+        self._active_zone_circuits = {
+            reg.circuit for reg in discovered
+            if reg.circuit in {"hc2", "hc3", "z2", "z3"} and reg.has_data
+        }
+        _LOGGER.info("Active zone circuits: %s", self._active_zone_circuits)
+
+        self.entities = generate_entity_descriptions(discovered, active_zone_circuits=self._active_zone_circuits)
 
     # Define runtime registers (e.g. z1RoomHumidity) on ebusd
     async def _define_custom_registers(self) -> None:
@@ -135,7 +142,10 @@ class VaillantCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             except Exception as exc:
                 _LOGGER.warning("Fallback read failed: %s (%s)", key, exc)
         if added:
-            self.entities = generate_entity_descriptions(list(self.registers.values()))
+            self.entities = generate_entity_descriptions(
+                list(self.registers.values()),
+                active_zone_circuits=self._active_zone_circuits,
+            )
         _LOGGER.info("Fallback: %d/%d known registers re-read (%d added, %d had data)",
                      len(known_missing), len(REGISTER_MAP), added,
                      len(known_missing) - sum(1 for k in known_missing
