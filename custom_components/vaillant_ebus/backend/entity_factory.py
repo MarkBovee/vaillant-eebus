@@ -135,9 +135,6 @@ def _classify_register(
         if register.writable:
             return "switch"
         return "binary_sensor"
-    if not _is_numeric(raw_value) and ";" not in raw_value:
-        pass
-
     if register.writable and _is_numeric(raw_value):
         meta_min = meta.min_value
         meta_max = meta.max_value
