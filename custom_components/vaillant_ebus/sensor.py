@@ -66,14 +66,18 @@ class EbusdSensor(CoordinatorEntity[VaillantCoordinator], SensorEntity):
     def native_value(self) -> float | str | None:
         data = self.coordinator.data.get("ebusd", {})
         raw = data.get(self._desc.key)
-        if raw is None or raw in ("-", "no data stored", "empty"):
-            return None
+        if raw is None or raw in ("-", "no data stored", "empty", ""):
+            return getattr(self, '_cached_value', None)
         try:
-            return float(raw)
+            val = float(raw)
         except (ValueError, TypeError):
             if getattr(self, '_attr_native_unit_of_measurement', None):
-                return None
-            return str(raw)
+                val = None
+            else:
+                val = str(raw)
+        if val is not None:
+            self._cached_value = val
+        return val
 
     @property
     def available(self) -> bool:

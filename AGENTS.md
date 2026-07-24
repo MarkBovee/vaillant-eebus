@@ -166,38 +166,16 @@ sshpass -p 'PASSWORD' ssh user@host \
 
 For large files (>40KB): split and append.
 
-## Branch workflow
+## Dev & release flow
 
-- **`main`** — enige branch. Kleine fixes direct op `main`, grotere features op feature branch.
-- **Feature branches:** `git checkout -b feat/description` → werk → PR → squash merge naar `main`.
-- **Releases:** commit + tag direct op `main` (git push origin main --tags).
+Uses generic `dev-release-flow` skill (in nebu-skills): feature/bugfix branches from main → draft PR → squash merge → release branch → PR → tag → CI builds release. Branch protection requires PRs for main; tags bypass protection.
 
-```
-main ──feature branch──► PR (squash) ──► main ──tag──► release
-```
+### Project-specific conventions
 
-Niet meer gebruiken: `pre-release` branch (verwijderd). Alles op `main`.
-
-## Release workflow
-
-**Process (CI/CD in `.github/workflows/ci.yml`):**
-
-1. **Zorg dat `main` up-to-date is** — `git checkout main && git pull`
-2. **Bump version + changelog — aparte commit:**
-   - update `manifest.json` + `pyproject.toml`
-   - update `CHANGELOG.md` — entry onder nieuwe versie
-3. **Commit + tag + push:**
-
-   ```bash
-   git add -A
-   git commit -m "release: vX.Y.Z"
-   git tag vX.Y.Z
-   git push origin main --tags
-   ```
-
-4. **CI/CD doet de rest:**
-   - `release` job: lint + test + compile → bouwt zip → `gh release create`
-   - Changelog-entry wordt automatisch uit `CHANGELOG.md` geplukt
+- **Version files**: `manifest.json` + `pyproject.toml`
+- **Validation**: `.venv/bin/ruff check . && .venv/bin/pytest -q && python3 -m compileall -f custom_components/vaillant_ebus/`
+- **CI/CD**: `.github/workflows/ci.yml` — tag `vX.Y.Z` triggert release build
+- **CHANGELOG**: entries onder `## X.Y.Z - YYYY-MM-DD` header, CI plukt entry voor release body
 
 ### CRITICAL: zip structuur
 
