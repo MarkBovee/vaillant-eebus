@@ -71,7 +71,7 @@ class EbusdSensor(CoordinatorEntity[VaillantCoordinator], SensorEntity):
         try:
             return float(raw)
         except (ValueError, TypeError):
-            if self._attr_native_unit_of_measurement:
+            if getattr(self, '_attr_native_unit_of_measurement', None):
                 return None
             return str(raw)
 
