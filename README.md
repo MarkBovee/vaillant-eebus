@@ -37,8 +37,8 @@ A **1-on-1 replacement for the mypyllant API integration** — climate entities 
 
 The heat pump communicates over a two-wire eBUS. You need an adapter to connect it to your network:
 
-- **Network adapter** (recommended): Vaillant VR921 or third-party network eBUS adapter. Gets its own IP on your LAN. Address format: `ens:192.168.x.x:9999`
-- **Serial adapter**: USB-to-eBUS or serial adapter connected to the HA server. Address format: `/dev/ttyUSB0`
+- **Network adapter (recommended):** C6 eBUS adapter running in **TCP enhanced** mode. The adapter connects to your WiFi/Ethernet network, receives its own IP address, and is used by ebusd via `ens:<ip>:9999`. Example: `ens:192.168.86.24:9999`
+- **Serial adapter:** USB-to-eBUS or serial adapter connected directly to the Home Assistant server. Address format: `/dev/ttyUSB0`
 
 Known compatible heat pumps: aroTHERM, aroTHERM plus, VWL series. Other Vaillant models with eBUS should work too — the integration auto-discovers whatever registers the heat pump exposes.
 
