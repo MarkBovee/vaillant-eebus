@@ -56,7 +56,11 @@ class VaillantCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed("Missing ebusd host")
         _LOGGER.info("Starting ebusd backend to %s:%s", host, port)
         self.ebusd_backend = EbusdTcpBackend(host=host, port=port)
-        await self.ebusd_backend.async_connect()
+        try:
+            await self.ebusd_backend.async_connect()
+        except Exception as exc:
+            _LOGGER.warning("ebusd connect failed, will retry on poll: %s", exc)
+            return
 
         await self._define_custom_registers()
 
@@ -156,9 +160,28 @@ class VaillantCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         _LOGGER.debug("Coordinator update, started=%s", self._started)
         if not self._started:
             await self.async_start()
+            if not self.ebusd_backend or not self.ebusd_backend.connected:
+                return {}
             return {"ebusd": self._values_from_registers()}
 
-        if self.ebusd_backend and self.ebusd_backend.connected:
+        if self.ebusd_backend:
+            if not self.ebusd_backend.connected:
+                try:
+                    await self.ebusd_backend.async_connect()
+                    await self._define_custom_registers()
+                    discovered = await self.ebusd_backend.async_find()
+                    for reg in discovered:
+                        self.registers[reg.key] = reg
+                    self._active_zone_circuits = {
+                        reg.circuit for reg in discovered
+                        if reg.circuit in {"hc2", "hc3", "z2", "z3"} and reg.has_data
+                    }
+                    self.entities = generate_entity_descriptions(
+                        discovered, active_zone_circuits=self._active_zone_circuits
+                    )
+                except Exception as exc:
+                    _LOGGER.warning("ebusd retry connect failed: %s", exc)
+                    return {}
             try:
                 discovered = await self.ebusd_backend.async_find()
                 for reg in discovered:
