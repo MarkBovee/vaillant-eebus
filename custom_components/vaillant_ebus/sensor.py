@@ -64,7 +64,6 @@ class EbusdSensor(CoordinatorEntity[VaillantCoordinator], SensorEntity):
 
     @property
     def native_value(self) -> float | str | None:
-        # Return parsed numeric or string value, None for empty/unavailable
         data = self.coordinator.data.get("ebusd", {})
         raw = data.get(self._desc.key)
         if raw is None or raw in ("-", "no data stored", "empty"):
@@ -72,6 +71,8 @@ class EbusdSensor(CoordinatorEntity[VaillantCoordinator], SensorEntity):
         try:
             return float(raw)
         except (ValueError, TypeError):
+            if getattr(self, '_attr_native_unit_of_measurement', None):
+                return None
             return str(raw)
 
     @property
